@@ -31,7 +31,7 @@ func LoadFromStorageToBigTable(ctx context.Context, m PubSubContainer) error {
 	decoder := json.NewDecoder(bytes.NewReader(m.Data))
 
 	if err := decoder.Decode(&params); err != nil {
-		return errors.Wrapf("failed to decode expected parameters from %q: %v", string(m.Data), err)
+		return errors.Wrapf(err, "failed to decode expected parameters from %q", string(m.Data))
 	}
 
 	client, err := bigquery.NewClient(ctx, _projectID)
@@ -40,7 +40,7 @@ func LoadFromStorageToBigTable(ctx context.Context, m PubSubContainer) error {
 	}
 	defer client.Close()
 
-	gscRef := bigquery.NewGCPReference(params.GCSReference)
+	gcsRef := bigquery.NewGCSReference(params.GCSReference)
 
 	loader := client.Dataset(params.DatasetID).Table(params.TableID).LoaderFrom(gcsRef)
 	loader.WriteDisposition = bigquery.WriteEmpty
