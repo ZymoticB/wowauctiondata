@@ -5,9 +5,9 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"log"
 
 	"cloud.google.com/go/bigquery"
+	"github.com/pkg/errors"
 )
 
 const _projectID = "wow-auction-data-274214"
@@ -36,7 +36,7 @@ func LoadFromStorageToBigTable(ctx context.Context, m PubSubContainer) error {
 
 	client, err := bigquery.NewClient(ctx, _projectID)
 	if err != nil {
-		return errors.Wrap(err, "failed to create big query client"))
+		return errors.Wrap(err, "failed to create big query client")
 	}
 	defer client.Close()
 
