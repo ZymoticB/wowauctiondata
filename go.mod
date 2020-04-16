@@ -1,4 +1,4 @@
-module github.com/Zymoticb/wowauctiondata
+module github.com/ZymoticB/wowauctiondata
 
 go 1.13
 
