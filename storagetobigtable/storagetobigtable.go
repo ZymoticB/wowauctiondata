@@ -5,12 +5,13 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"os"
 
 	"cloud.google.com/go/bigquery"
 	"github.com/pkg/errors"
 )
 
-const _projectID = "wow-auction-data-274214"
+var _projectID = os.Getenv("GCP_PROJECT")
 
 // PubSubContainer is a container for the inbound pubsub message which is provided in
 // Data.
