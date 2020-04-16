@@ -27,6 +27,7 @@ const (
 	_clientSecretSecretName = "projects/13595582905/secrets/blizzard-oauth-client-secret/versions/latest"
 
 	_destBucketName = "wow-realm-data"
+	_destFileName   = "realms"
 
 	_region = "us"
 
@@ -120,7 +121,7 @@ func writeRealmsToStorage(ctx context.Context, realms wowapiclient.ConnectedReal
 	}
 
 	bkt := client.Bucket(_destBucketName)
-	obj := bkt.Object("realms")
+	obj := bkt.Object(_destFileName)
 	writer := obj.NewWriter(ctx)
 	csvWriter := csv.NewWriter(writer)
 	for name, cr := range realms {
@@ -143,7 +144,7 @@ func writeRealmsToStorage(ctx context.Context, realms wowapiclient.ConnectedReal
 	if err != nil {
 		return "", errors.Wrap(err, "failed to read back attrs")
 	}
-	return attrs.MediaLink, nil
+	return fmt.Sprintf("gs://%s/%s", _destBucketName, _destFileName), nil
 }
 
 // TODO move this to a shared module
