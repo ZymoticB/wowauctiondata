@@ -3,7 +3,6 @@ package fetchrealms
 import (
 	"bytes"
 	"context"
-	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"log"
@@ -25,8 +24,8 @@ const (
 	_region = "us"
 )
 
-// PubSubContainer is a container for the inbound pubsub message which is actually base64
-// encoded within Data
+// PubSubContainer is a container for the inbound pubsub message which is provided in
+// Data.
 type PubSubContainer struct {
 	Data []byte `json:"data"`
 }
@@ -83,18 +82,12 @@ func FetchRealms(ctx context.Context, m PubSubContainer) error {
 }
 
 func getMessage(m PubSubContainer) (PubSubMessage, error) {
-	out := make([]byte, len(m.Data))
-	_, err := base64.StdEncoding.Strict().Decode(out, m.Data)
-	if err != nil {
-		return PubSubMessage{}, errors.Wrapf(err, "failed to decode base64 as string %q, raw %v", string(m.Data), m.Data)
-	}
-
 	msg := PubSubMessage{}
 
-	decoder := json.NewDecoder(bytes.NewReader(out))
-	err = decoder.Decode(&msg)
+	decoder := json.NewDecoder(bytes.NewReader(m.Data))
+	err := decoder.Decode(&msg)
 	if err != nil {
-		return PubSubMessage{}, errors.Wrapf(err, "failed to decode json %q", string(out))
+		return PubSubMessage{}, errors.Wrapf(err, "failed to decode json %q", string(m.Data))
 	}
 	return msg, nil
 }
