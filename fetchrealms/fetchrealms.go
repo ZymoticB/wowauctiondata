@@ -39,8 +39,6 @@ type PubSubMessage struct {
 // FetchRealms is a cloud function to fetch all wow realms
 func FetchRealms(ctx context.Context, m PubSubContainer) error {
 	log.Println("in function")
-	log.Fatalf("in function")
-	return errors.New("show me a message please")
 	if len(m.Data) == 0 {
 		log.Println("got empty message, skipping")
 		return nil
@@ -80,6 +78,8 @@ func FetchRealms(ctx context.Context, m PubSubContainer) error {
 
 	realms, err := apiClient.GetConnectedRealms()
 	log.Printf("Got realms %v", realms)
+
+	return nil
 }
 
 func getMessage(m PubSubContainer) (PubSubMessage, error) {
