@@ -19,7 +19,7 @@ const (
 	_secretFetchTimeout = 5 * time.Second
 
 	_clientIDSecretName     = "projects/13595582905/secrets/blizzard-oauth-client-id/versions/latest"
-	_clientSecretSecretName = "projects/13595582905/secrets/blizzard-oauth-client-secret/version/latest"
+	_clientSecretSecretName = "projects/13595582905/secrets/blizzard-oauth-client-secret/versions/latest"
 
 	_region = "us"
 )
@@ -95,8 +95,8 @@ func getMessage(m PubSubContainer) (PubSubMessage, error) {
 // fetchSecrets fetches secrets from the secretmanager API using the keys of toFetch as the
 // secret names. It mutates the given toFetch map.
 func fetchSecrets(ctx context.Context, toFetch map[string]string) error {
-	setupCtx := context.Background()
-	secretClient, err := secretmanager.NewClient(setupCtx)
+	secretClient, err := secretmanager.NewClient(ctx)
+	defer secretClient.Close()
 
 	if err != nil {
 		return err
