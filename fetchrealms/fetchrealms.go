@@ -37,20 +37,22 @@ type PubSubMessage struct {
 }
 
 // FetchRealms is a cloud function to fetch all wow realms
-func FetchRealms(ctx context.Context, m PubSubContainer) {
+func FetchRealms(ctx context.Context, m PubSubContainer) error {
+	log.Println("in function")
 	if len(m.Data) == 0 {
 		log.Println("got empty message, skipping")
-		return
+		return nil
 	}
 
 	msg, err := getMessage(m)
 	if err != nil {
-		log.Fatalf("failed to get message from pub/sub message: %v", err)
+		log.Errorf("failed to get message from pub/sub message: %v", err)
+		return err
 	}
 
 	if msg.Target != _targetName {
 		log.Printf("trigger intended for a different target %q", msg.Target)
-		return
+		return nil
 	}
 
 	secrets := map[string]string{
@@ -68,7 +70,8 @@ func FetchRealms(ctx context.Context, m PubSubContainer) {
 		ClientSecret: secrets[_clientSecretSecretName],
 	}, _region)
 	if err != nil {
-		log.Fatalf("failed to get oauth2 http client %v", err)
+		log.Errorf("failed to get oauth2 http client %v", err)
+		return err
 	}
 
 	apiClient := wowapiclient.NewWOWAPIClient(httpClient, _region)
