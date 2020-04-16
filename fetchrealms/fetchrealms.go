@@ -24,7 +24,7 @@ const (
 	_clientIDSecretName     = "projects/13595582905/secrets/blizzard-oauth-client-id/versions/latest"
 	_clientSecretSecretName = "projects/13595582905/secrets/blizzard-oauth-client-secret/versions/latest"
 
-	_destBucketName = "wow-realms"
+	_destBucketName = "wow-realm-data"
 
 	_region = "us"
 )
@@ -42,7 +42,6 @@ type PubSubMessage struct {
 
 // FetchRealms is a cloud function to fetch all wow realms
 func FetchRealms(ctx context.Context, m PubSubContainer) error {
-	log.Println("in function")
 	if len(m.Data) == 0 {
 		log.Println("got empty message, skipping")
 		return nil
