@@ -3,12 +3,15 @@ package fetchrealms
 import (
 	"bytes"
 	"context"
+	"encoding/csv"
 	"encoding/json"
 	"fmt"
 	"log"
+	"strconv"
 	"time"
 
 	secretmanager "cloud.google.com/go/secretmanager/apiv1"
+	"cloud.google.com/go/storage"
 	"github.com/ZymoticB/wowauctiondata/wowapiclient"
 	"github.com/pkg/errors"
 	secretmanagerpb "google.golang.org/genproto/googleapis/cloud/secretmanager/v1"
@@ -20,6 +23,8 @@ const (
 
 	_clientIDSecretName     = "projects/13595582905/secrets/blizzard-oauth-client-id/versions/latest"
 	_clientSecretSecretName = "projects/13595582905/secrets/blizzard-oauth-client-secret/versions/latest"
+
+	_destBucketName = "wow-realms"
 
 	_region = "us"
 )
@@ -61,24 +66,69 @@ func FetchRealms(ctx context.Context, m PubSubContainer) error {
 
 	err = fetchSecrets(ctx, secrets)
 	if err != nil {
-		log.Fatalf("failed to fetch secrets: %v", err)
+		log.Printf("failed to fetch secrets: %v", err)
+		return err
 	}
 
+	realms, err := fetchRealms(ctx, secrets)
+	if err != nil {
+		log.Printf("failed to fetch realms: %v", err)
+		return err
+	}
+	log.Printf("Got realms %v", realms)
+
+	err = writeRealmsToStorage(ctx, realms)
+	if err != nil {
+		log.Printf("failed to write to storage: %v", err)
+		return err
+	}
+
+	log.Printf("successfully wrote realms to storage")
+	return nil
+}
+
+func writeRealmsToStorage(ctx context.Context, realms wowapiclient.ConnectedRealms) error {
+	client, err := storage.NewClient(ctx)
+	if err != nil {
+		return errors.Wrap(err, "failed to create gcp client")
+	}
+
+	bkt := client.Bucket(_destBucketName)
+	obj := bkt.Object("realms")
+	writer := obj.NewWriter(ctx)
+	csvWriter := csv.NewWriter(writer)
+	for name, cr := range realms {
+		err := csvWriter.Write([]string{name, strconv.Itoa(cr.ID)})
+		if err != nil {
+			return errors.Wrap(err, "failed to write to storage")
+		}
+	}
+
+	csvWriter.Flush()
+	if err := csvWriter.Error(); err != nil {
+		return errors.Wrap(err, "failed to write to storage")
+	}
+
+	if err := writer.Close(); err != nil {
+		return errors.Wrap(err, "failed to write to storage")
+	}
+
+	return nil
+}
+
+func fetchRealms(ctx context.Context, secrets map[string]string) (wowapiclient.ConnectedRealms, error) {
 	httpClient, err := wowapiclient.GetHTTPClient(ctx, wowapiclient.OAuth2Secrets{
 		ClientID:     secrets[_clientIDSecretName],
 		ClientSecret: secrets[_clientSecretSecretName],
 	}, _region)
 	if err != nil {
 		log.Printf("failed to get oauth2 http client %v", err)
-		return err
+		return nil, err
 	}
 
 	apiClient := wowapiclient.NewWOWAPIClient(httpClient, _region)
 
-	realms, err := apiClient.GetConnectedRealms()
-	log.Printf("Got realms %v", realms)
-
-	return nil
+	return apiClient.GetConnectedRealms()
 }
 
 func getMessage(m PubSubContainer) (PubSubMessage, error) {
