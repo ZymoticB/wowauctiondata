@@ -1,4 +1,4 @@
-module github.com/zymoticb/wowauctiondata/wowapiclient
+module github.com/ZymoticB/wowauctiondata/wowapiclient
 
 go 1.13
 
