@@ -46,7 +46,7 @@ func FetchRealms(ctx context.Context, m PubSubContainer) error {
 
 	msg, err := getMessage(m)
 	if err != nil {
-		log.Errorf("failed to get message from pub/sub message: %v", err)
+		log.Printf("failed to get message from pub/sub message: %v", err)
 		return err
 	}
 
@@ -70,7 +70,7 @@ func FetchRealms(ctx context.Context, m PubSubContainer) error {
 		ClientSecret: secrets[_clientSecretSecretName],
 	}, _region)
 	if err != nil {
-		log.Errorf("failed to get oauth2 http client %v", err)
+		log.Printf("failed to get oauth2 http client %v", err)
 		return err
 	}
 
