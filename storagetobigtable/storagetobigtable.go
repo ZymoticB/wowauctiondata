@@ -20,9 +20,27 @@ type PubSubContainer struct {
 
 type pubSubMessage struct {
 	// expected to be of the form gs://...
-	GCSReference string `json:"sourceBucket"`
-	DatasetID    string `json:"datasetID"`
-	TableID      string `json:"tableID"`
+	GCSReference string    `json:"gcsReference"`
+	DatasetID    string    `json:"datasetID"`
+	TableID      string    `json:"tableID"`
+	WriteMode    writeMode `json:"writeMode"`
+}
+
+// ifempty, truncate, append
+type writeMode bigquery.TableWriteDisposition
+
+func (w *writeMode) UnmarshalJSON(b []byte) error {
+	switch string(b) {
+	case "ifempty":
+		*w = writeMode(bigquery.WriteEmpty)
+	case "truncate":
+		*w = writeMode(bigquery.WriteTruncate)
+	case "append":
+		*w = writeMode(bigquery.WriteAppend)
+	default:
+		return fmt.Errorf("cannot unmarshal %q as writeMode", string(b))
+	}
+	return nil
 }
 
 // LoadFromStorageToBigTable loads a csv from storage and imports it to big table.
@@ -43,7 +61,7 @@ func LoadFromStorageToBigTable(ctx context.Context, m PubSubContainer) error {
 	gcsRef := bigquery.NewGCSReference(params.GCSReference)
 
 	loader := client.Dataset(params.DatasetID).Table(params.TableID).LoaderFrom(gcsRef)
-	loader.WriteDisposition = bigquery.WriteEmpty
+	loader.WriteDisposition = bigquery.TableWriteDisposition(params.WriteMode)
 
 	job, err := loader.Run(ctx)
 	if err != nil {
