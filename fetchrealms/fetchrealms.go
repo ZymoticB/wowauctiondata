@@ -174,6 +174,8 @@ func notifyStorageToBigQuery(ctx context.Context, gcsRef string) error {
 	if err != nil {
 		return errors.Wrap(err, "failed to publish message to pubsub")
 	}
+
+	log.Printf("wrote message to storagetobigtable")
 	return nil
 }
 
