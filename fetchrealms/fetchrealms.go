@@ -7,9 +7,11 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"os"
 	"strconv"
 	"time"
 
+	"cloud.google.com/go/pubsub"
 	secretmanager "cloud.google.com/go/secretmanager/apiv1"
 	"cloud.google.com/go/storage"
 	"github.com/ZymoticB/wowauctiondata/wowapiclient"
@@ -27,7 +29,13 @@ const (
 	_destBucketName = "wow-realm-data"
 
 	_region = "us"
+
+	_datasetID     = "wow_data"
+	_tableID       = "connected_realms"
+	_writeTruncate = "truncate"
 )
+
+var _projectID = os.Getenv("GCP_PROJECT")
 
 // PubSubContainer is a container for the inbound pubsub message which is provided in
 // Data.
@@ -38,6 +46,21 @@ type PubSubContainer struct {
 // PubSubMessage is the decoded pub/sub message sent to the application
 type PubSubMessage struct {
 	Target string `json:"target"`
+}
+
+// pubsubClient is a global Pub/Sub client, initialized once per instance.
+var pubsubClient *pubsub.Client
+
+func init() {
+	// err is pre-declared to avoid shadowing client.
+	var err error
+
+	// client is initialized with context.Background() because it should
+	// persist between function invocations.
+	pubsubClient, err = pubsub.NewClient(context.Background(), _projectID)
+	if err != nil {
+		log.Fatalf("pubsub.NewClient: %v", err)
+	}
 }
 
 // FetchRealms is a cloud function to fetch all wow realms
@@ -76,20 +99,24 @@ func FetchRealms(ctx context.Context, m PubSubContainer) error {
 	}
 	log.Printf("Got realms %v", realms)
 
-	err = writeRealmsToStorage(ctx, realms)
+	gcsRef, err := writeRealmsToStorage(ctx, realms)
 	if err != nil {
 		log.Printf("failed to write to storage: %v", err)
 		return err
+	}
+
+	if err := notifyStorageToBigQuery(ctx, gcsRef); err != nil {
+		return errors.Wrap(err, "failed to notify storagetobigquery")
 	}
 
 	log.Printf("successfully wrote realms to storage")
 	return nil
 }
 
-func writeRealmsToStorage(ctx context.Context, realms wowapiclient.ConnectedRealms) error {
+func writeRealmsToStorage(ctx context.Context, realms wowapiclient.ConnectedRealms) (string, error) {
 	client, err := storage.NewClient(ctx)
 	if err != nil {
-		return errors.Wrap(err, "failed to create gcp client")
+		return "", errors.Wrap(err, "failed to create gcp client")
 	}
 
 	bkt := client.Bucket(_destBucketName)
@@ -99,19 +126,54 @@ func writeRealmsToStorage(ctx context.Context, realms wowapiclient.ConnectedReal
 	for name, cr := range realms {
 		err := csvWriter.Write([]string{name, strconv.Itoa(cr.ID)})
 		if err != nil {
-			return errors.Wrap(err, "failed to write to storage")
+			return "", errors.Wrap(err, "failed to write to storage")
 		}
 	}
 
 	csvWriter.Flush()
 	if err := csvWriter.Error(); err != nil {
-		return errors.Wrap(err, "failed to write to storage")
+		return "", errors.Wrap(err, "failed to write to storage")
 	}
 
 	if err := writer.Close(); err != nil {
-		return errors.Wrap(err, "failed to write to storage")
+		return "", errors.Wrap(err, "failed to write to storage")
 	}
 
+	attrs, err := obj.Attrs(ctx)
+	if err != nil {
+		return "", errors.Wrap(err, "failed to read back attrs")
+	}
+	return attrs.MediaLink, nil
+}
+
+// TODO move this to a shared module
+type pubSubMessage struct {
+	// expected to be of the form gs://...
+	GCSReference string `json:"gcsReference"`
+	DatasetID    string `json:"datasetID"`
+	TableID      string `json:"tableID"`
+	WriteMode    string `json:"writeMode"`
+}
+
+func notifyStorageToBigQuery(ctx context.Context, gcsRef string) error {
+	msg := pubSubMessage{
+		GCSReference: gcsRef,
+		DatasetID:    _datasetID,
+		TableID:      _tableID,
+		WriteMode:    _writeTruncate,
+	}
+	b, err := json.Marshal(msg)
+	if err != nil {
+		return errors.Wrap(err, "failed to marshal pubsub message")
+	}
+
+	t := pubsubClient.Topic("storagetobigtable")
+	_, err = t.Publish(ctx, &pubsub.Message{
+		Data: b,
+	}).Get(ctx)
+	if err != nil {
+		return errors.Wrap(err, "failed to publish message to pubsub")
+	}
 	return nil
 }
 
