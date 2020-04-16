@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"strings"
 
 	"cloud.google.com/go/bigquery"
 	"github.com/pkg/errors"
@@ -31,7 +32,8 @@ type pubSubMessage struct {
 type writeMode bigquery.TableWriteDisposition
 
 func (w *writeMode) UnmarshalJSON(b []byte) error {
-	switch string(b) {
+	toMatch := strings.Trim(string(b), `"`)
+	switch toMatch {
 	case "ifempty":
 		*w = writeMode(bigquery.WriteEmpty)
 	case "truncate":
@@ -39,7 +41,7 @@ func (w *writeMode) UnmarshalJSON(b []byte) error {
 	case "append":
 		*w = writeMode(bigquery.WriteAppend)
 	default:
-		return fmt.Errorf("cannot unmarshal %q as writeMode", string(b))
+		return fmt.Errorf("cannot unmarshal %q as writeMode", toMatch)
 	}
 	return nil
 }
