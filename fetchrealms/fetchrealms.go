@@ -10,8 +10,8 @@ import (
 	"time"
 
 	secretmanager "cloud.google.com/go/secretmanager/apiv1"
-	"github.com/pkg/errors"
 	"github.com/ZymoticB/wowauctiondata/wowapiclient"
+	"github.com/pkg/errors"
 	secretmanagerpb "google.golang.org/genproto/googleapis/cloud/secretmanager/v1"
 )
 
@@ -86,7 +86,7 @@ func getMessage(m PubSubContainer) (PubSubMessage, error) {
 	out := make([]byte, len(m.Data))
 	_, err := base64.StdEncoding.Strict().Decode(out, m.Data)
 	if err != nil {
-		return PubSubMessage{}, err
+		return PubSubMessage{}, errors.Wrapf(err, "failed to decode base64 as string %q, raw %v", string(m.Data), m.Data)
 	}
 
 	msg := PubSubMessage{}
