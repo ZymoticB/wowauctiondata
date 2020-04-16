@@ -11,7 +11,7 @@ import (
 
 	secretmanager "cloud.google.com/go/secretmanager/apiv1"
 	"github.com/pkg/errors"
-	"github.com/zymoticb/wowauctiondata/wowapiclient"
+	"github.com/ZymoticB/wowauctiondata/wowapiclient"
 	secretmanagerpb "google.golang.org/genproto/googleapis/cloud/secretmanager/v1"
 )
 
