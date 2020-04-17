@@ -140,10 +140,6 @@ func writeRealmsToStorage(ctx context.Context, realms wowapiclient.ConnectedReal
 		return "", errors.Wrap(err, "failed to write to storage")
 	}
 
-	attrs, err := obj.Attrs(ctx)
-	if err != nil {
-		return "", errors.Wrap(err, "failed to read back attrs")
-	}
 	return fmt.Sprintf("gs://%s/%s", _destBucketName, _destFileName), nil
 }
 
