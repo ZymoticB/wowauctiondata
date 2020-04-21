@@ -115,6 +115,79 @@ func (c *WOWAPIClient) getConnectedRealm(id int) (ConnectedRealm, error) {
 	return cr, nil
 }
 
+// GetItem gets an item from the wow API with the given ID.
+func (c *WOWAPIClient) GetItem(id int) (Item, error) {
+	// no url args needed
+	resp := itemResponse{}
+	if err := c.callAPI(fmt.Sprintf("/data/wow/item/%v", id), url.Values{}, &resp); err != nil {
+		return Item{}, err
+	}
+
+	return Item{
+		ID:             resp.ID,
+		Name:           resp.Name,
+		ItemClass:      resp.ItemClass.Name,
+		ItemClassID:    resp.ItemClass.ID,
+		ItemSubclass:   resp.ItemSubclass.Name,
+		ItemSubclassID: resp.ItemSubclass.ID,
+	}, nil
+}
+
+// GetAuctions gets all auctions from the given connected realm ID
+func (c *WOWAPIClient) GetAuctions(realmID int) ([]Auction, error) {
+	// no url args needed
+	resp := auctionsResponse{}
+	if err := c.callAPI(fmt.Sprintf("/data/wow/connected-realm/%v/auctions", realmID), url.Values{}, &resp); err != nil {
+		return nil, err
+	}
+
+	auctions := make([]Auction, 0, len(resp.Auctions))
+	for _, a := range resp.Auctions {
+		auction := Auction{
+			RealmID:   realmID,
+			ID:        a.ID,
+			ItemID:    a.Item.ID,
+			Quantity:  a.Quantity,
+			UnitPrice: a.UnitPrice,
+			Buyout:    a.Buyout,
+			TimeLeft:  a.TimeLeft,
+		}
+		if auction.Quantity == 0 {
+			return nil, fmt.Errorf("auction id %v of %v has a quantity of 0", auction.ID, auction.ItemID)
+		}
+		if auction.Buyout == 0 && auction.UnitPrice == 0 {
+			return nil, fmt.Errorf("auction id %v of %v has a buyout of 0 and a unitprice of 0", auction.ID, auction.ItemID)
+		}
+
+		auctions = append(auctions, auction)
+	}
+
+	return auctions, nil
+}
+
+func (c *WOWAPIClient) callAPI(path string, queryArgs url.Values, responseTarget interface{}) error {
+	u := c.urlFromQueryAndPath(path, queryArgs)
+
+	req, err := http.NewRequest("GET", u.String(), nil)
+	if err != nil {
+		return errors.Wrapf(err, "failed to call %v", u.String())
+	}
+	addDynamicRegionNamespace(req, c.region)
+
+	resp, err := c.httpClient.Do(req)
+	if err != nil {
+		return errors.Wrapf(err, "failed to call %v", u.String())
+	}
+
+	dc := json.NewDecoder(resp.Body)
+	err = dc.Decode(responseTarget)
+	if err != nil {
+		return errors.Wrapf(err, "failed to call %v", u.String())
+	}
+
+	return nil
+}
+
 func (c *WOWAPIClient) urlFromQueryAndPath(path string, values url.Values) *url.URL {
 	// Force all output to en_US for now
 	values.Add("locale", "en_US")
@@ -158,9 +231,6 @@ type link struct {
 	Href string
 }
 
-type auctionsResponse struct {
-}
-
 // ConnectedRealms is a collection of all ConnectedRealm's which can be fetched by friendly name
 // rather than ID.
 type ConnectedRealms map[string]ConnectedRealm
@@ -172,3 +242,91 @@ func (cr ConnectedRealms) Get(n string) (ConnectedRealm, error) {
 	}
 	return ConnectedRealm{}, fmt.Errorf("unknown connected realm %v", n)
 }
+
+type itemResponse struct {
+	Links        map[string]link `json:"_links"`
+	ID           int             `json:"id"`
+	Name         string          `json:"name"`
+	ItemClass    itemClass
+	ItemSubclass itemClass
+}
+
+type itemClass struct {
+	Key  map[string]link `json:"key"`
+	Name string          `json:"name"`
+	ID   int             `json:"id"`
+}
+
+// Item is a minimal representation of an ingame item.
+type Item struct {
+	ID             int
+	Name           string
+	ItemClass      string
+	ItemClassID    int
+	ItemSubclass   string
+	ItemSubclassID int
+}
+
+type auctionsResponse struct {
+	Links          map[string]link   `json:"_links"`
+	ConnectedRealm link              `json:"connected_realm"`
+	Auctions       []auctionResponse `json:"auctions"`
+}
+
+type auctionResponse struct {
+	ID   int `json:"id"`
+	Item struct {
+		ID int `json:"id"`
+	} `json:"item"`
+	Quantity  int      `json:"quantity"`
+	UnitPrice int      `json:"unit_price,omitempty"`
+	Buyout    int      `json:"buyout,omitempty"`
+	TimeLeft  TimeLeft `json:"time_left"`
+}
+
+// Auction represents a single auction within a single region. Currently this does not support
+// Items with "bonuses" or "modifiers" such as sockets, ilvl upgrades (warforge), or extra secondaries
+// such as Indestructible or Speed. An Auction will either have a Buyout price, or a UnitPrice. If Buyout
+// is >0 it should be used.
+type Auction struct {
+	RealmID   int
+	ID        int
+	ItemID    int
+	Quantity  int
+	UnitPrice int
+	Buyout    int
+	TimeLeft  TimeLeft
+}
+
+// TimeLeft represents how much time is left in an auction. The API makes this deliberately imprecise.
+type TimeLeft string
+
+// UnmarshalJSON unmarshals a TimeLeft from a json field.
+func (tl *TimeLeft) UnmarshalJSON(b []byte) error {
+	toMatch := strings.Trim(string(b), `"`)
+	switch TimeLeft(toMatch) {
+	case TimeLeftVeryLong:
+		*tl = TimeLeftVeryLong
+	case TimeLeftLong:
+		*tl = TimeLeftLong
+	case TimeLeftMedium:
+		*tl = TimeLeftMedium
+	case TimeLeftShort:
+		*tl = TimeLeftShort
+	default:
+		return fmt.Errorf("cannot unmarshal %q as TimeLeft", toMatch)
+	}
+
+	return nil
+}
+
+const (
+	// TimeLeftShort means there is less than 2 hours left on the auction.
+	TimeLeftShort TimeLeft = "SHORT"
+	// TimeLeftMedium means there is 2-12 hours left on the auction.
+	TimeLeftMedium = "MEDIUM"
+	// TimeLeftLong means there is 12-24 hours left on the auction.
+	TimeLeftLong = "LONG"
+	// TimeLeftVeryLong means there is more than 24 hours left on the auction.
+	TimeLeftVeryLong = "VERY_LONG"
+)
