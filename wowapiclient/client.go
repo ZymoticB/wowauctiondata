@@ -150,6 +150,7 @@ func (c *WOWAPIClient) GetAuctions(realmID int) ([]Auction, error) {
 			Quantity:  a.Quantity,
 			UnitPrice: a.UnitPrice,
 			Buyout:    a.Buyout,
+			Bid:       a.Bid,
 			TimeLeft:  a.TimeLeft,
 		}
 		if auction.Quantity == 0 {
@@ -281,13 +282,14 @@ type auctionResponse struct {
 	Quantity  int      `json:"quantity"`
 	UnitPrice int      `json:"unit_price,omitempty"`
 	Buyout    int      `json:"buyout,omitempty"`
+	Bid       int      `json:"bid"`
 	TimeLeft  TimeLeft `json:"time_left"`
 }
 
 // Auction represents a single auction within a single region. Currently this does not support
 // Items with "bonuses" or "modifiers" such as sockets, ilvl upgrades (warforge), or extra secondaries
-// such as Indestructible or Speed. An Auction will either have a Buyout price, or a UnitPrice. If Buyout
-// is >0 it should be used.
+// such as Indestructible or Speed. An Auction will either have a Buyout price or a Bid price, or a UnitPrice. If Buyout
+// or Bid >0 it should be used.
 type Auction struct {
 	RealmID   int
 	ID        int
@@ -295,6 +297,7 @@ type Auction struct {
 	Quantity  int
 	UnitPrice int
 	Buyout    int
+	Bid       int
 	TimeLeft  TimeLeft
 }
 
