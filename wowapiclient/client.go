@@ -156,8 +156,8 @@ func (c *WOWAPIClient) GetAuctions(realmID int) ([]Auction, error) {
 		if auction.Quantity == 0 {
 			return nil, fmt.Errorf("auction id %v of %v has a quantity of 0", auction.ID, auction.ItemID)
 		}
-		if auction.Buyout == 0 && auction.UnitPrice == 0 {
-			return nil, fmt.Errorf("auction id %v of %v has a buyout of 0 and a unitprice of 0", auction.ID, auction.ItemID)
+		if auction.Buyout == 0 && auction.UnitPrice == 0 && auction.Bid == 0 {
+			return nil, fmt.Errorf("auction id %v of %v has a buyout of 0 and a unitprice of 0 and a bid of 0", auction.ID, auction.ItemID)
 		}
 
 		auctions = append(auctions, auction)
