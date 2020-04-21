@@ -30,10 +30,12 @@ dmitri.shuralyov.com/gpu/mtl v0.0.0-20190408044501-666a987793e9/go.mod h1:H6x//7
 github.com/BurntSushi/toml v0.3.1 h1:WXkYYl6Yr3qBf1K79EBnL4mak0OimBfB0XUf9Vl28OQ=
 github.com/BurntSushi/toml v0.3.1/go.mod h1:xHWCNGjB5oqiDr8zfno3MHue2Ht5sIBksp03qcyfWMU=
 github.com/BurntSushi/xgb v0.0.0-20160522181843-27f122750802/go.mod h1:IVnqGOEym/WlBOVXweHU+Q+/VP0lqqI8lqeDx9IjBqo=
-github.com/ZymoticB/wowauctiondata v0.0.5 h1:4CJFFksquxCPoMTd18L4yFKHj3XeRmdzQpY0mymyfxU=
-github.com/ZymoticB/wowauctiondata v0.0.5/go.mod h1:TRfz493vgG3xYbbRea8845VmKW8rfyKB50PH1+q9r9M=
 github.com/ZymoticB/wowauctiondata v0.0.6-0.20200421153058-713f16e9bc98 h1:dpga7Whd6YJ1Tty9rwVLGseS4h6pD/qyU5TkVs/hhwo=
 github.com/ZymoticB/wowauctiondata v0.0.6-0.20200421153058-713f16e9bc98/go.mod h1:TRfz493vgG3xYbbRea8845VmKW8rfyKB50PH1+q9r9M=
+github.com/ZymoticB/wowauctiondata v0.0.6-0.20200421160805-9c4a9565a853 h1:FDldetToPSgqipjhevmoz9cDe2legwlBXVVnAkuQy+4=
+github.com/ZymoticB/wowauctiondata v0.0.6-0.20200421160805-9c4a9565a853/go.mod h1:TRfz493vgG3xYbbRea8845VmKW8rfyKB50PH1+q9r9M=
+github.com/ZymoticB/wowauctiondata v0.0.6-0.20200421161538-b0f24f5e055f h1:LNs+ocvb5Xi0fhXdvhNgqlYhE+8GosGP1ZB0xo/20GM=
+github.com/ZymoticB/wowauctiondata v0.0.6-0.20200421161538-b0f24f5e055f/go.mod h1:TRfz493vgG3xYbbRea8845VmKW8rfyKB50PH1+q9r9M=
 github.com/census-instrumentation/opencensus-proto v0.2.1/go.mod h1:f6KPmirojxKA12rnyqOA5BBL4O983OfeGPqjHWSTneU=
 github.com/chzyer/logex v1.1.10/go.mod h1:+Ywpsq7O8HXn0nuIou7OrIPyXbp3wmkHB+jjWRnGsAI=
 github.com/chzyer/readline v0.0.0-20180603132655-2972be24d48e/go.mod h1:nSuG5e5PlCu98SY8svDHJxuZscDgtXS6KTTbou5AhLI=

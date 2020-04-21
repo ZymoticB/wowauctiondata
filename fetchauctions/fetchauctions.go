@@ -127,7 +127,16 @@ func writeRealmsToStorage(ctx context.Context, auctions []wowapiclient.Auction) 
 	writer := obj.NewWriter(ctx)
 	csvWriter := csv.NewWriter(writer)
 	for _, a := range auctions {
-		row := []string{strconv.Itoa(a.ID), strconv.Itoa(a.ItemID), strconv.Itoa(a.Quantity), strconv.Itoa(a.UnitPrice), strconv.Itoa(a.Buyout), string(a.TimeLeft), strconv.Itoa(a.RealmID)}
+		row := []string{
+			strconv.Itoa(a.ID),
+			strconv.Itoa(a.ItemID),
+			strconv.Itoa(a.Quantity),
+			strconv.Itoa(a.UnitPrice),
+			strconv.Itoa(a.Buyout),
+			strconv.Itoa(a.Bid),
+			string(a.TimeLeft),
+			strconv.Itoa(a.RealmID),
+		}
 		err := csvWriter.Write(row)
 		if err != nil {
 			return "", errors.Wrap(err, "failed to write to storage")
