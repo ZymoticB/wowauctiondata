@@ -36,6 +36,8 @@ github.com/ZymoticB/wowauctiondata v0.0.6-0.20200421160805-9c4a9565a853 h1:FDlde
 github.com/ZymoticB/wowauctiondata v0.0.6-0.20200421160805-9c4a9565a853/go.mod h1:TRfz493vgG3xYbbRea8845VmKW8rfyKB50PH1+q9r9M=
 github.com/ZymoticB/wowauctiondata v0.0.6-0.20200421161538-b0f24f5e055f h1:LNs+ocvb5Xi0fhXdvhNgqlYhE+8GosGP1ZB0xo/20GM=
 github.com/ZymoticB/wowauctiondata v0.0.6-0.20200421161538-b0f24f5e055f/go.mod h1:TRfz493vgG3xYbbRea8845VmKW8rfyKB50PH1+q9r9M=
+github.com/ZymoticB/wowauctiondata v0.0.6-0.20200421162104-cc6f1561eff8 h1:/Al1AoWP78JmMS87h45hWlQAl5mycLkb9ZXvHMTJbaY=
+github.com/ZymoticB/wowauctiondata v0.0.6-0.20200421162104-cc6f1561eff8/go.mod h1:TRfz493vgG3xYbbRea8845VmKW8rfyKB50PH1+q9r9M=
 github.com/census-instrumentation/opencensus-proto v0.2.1/go.mod h1:f6KPmirojxKA12rnyqOA5BBL4O983OfeGPqjHWSTneU=
 github.com/chzyer/logex v1.1.10/go.mod h1:+Ywpsq7O8HXn0nuIou7OrIPyXbp3wmkHB+jjWRnGsAI=
 github.com/chzyer/readline v0.0.0-20180603132655-2972be24d48e/go.mod h1:nSuG5e5PlCu98SY8svDHJxuZscDgtXS6KTTbou5AhLI=
