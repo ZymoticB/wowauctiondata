@@ -67,8 +67,8 @@ func init() {
 	}
 }
 
-// FetchRealms is a cloud function to fetch all wow realms
-func FetchRealms(ctx context.Context, m PubSubContainer) error {
+// FetchAuctions is a cloud function to fetch all wow realms
+func FetchAuctions(ctx context.Context, m PubSubContainer) error {
 	if len(m.Data) == 0 {
 		log.Println("got empty message, skipping")
 		return nil
